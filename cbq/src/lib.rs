@@ -52,6 +52,30 @@ pub unsafe extern "C" fn cbq__pop(ptr: *mut Cbq, buf: *mut u8, len: u32) -> u32 
     }
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn cbq__capacity(ptr: *mut Cbq) -> u32 {
+    let cbq = &*ptr;
+    u32::try_from(cbq.q.capacity()).unwrap()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cbq__is_empty(ptr: *mut Cbq) -> u8 {
+    let cbq = &*ptr;
+    cbq.q.is_empty().into()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cbq__is_full(ptr: *mut Cbq) -> u8 {
+    let cbq = &*ptr;
+    cbq.q.is_full().into()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn cbq__len(ptr: *mut Cbq) -> u32 {
+    let cbq = &*ptr;
+    u32::try_from(cbq.q.len()).unwrap()
+}
+
 //#[cfg(test)]
 //mod tests {
 //    use super::*;
