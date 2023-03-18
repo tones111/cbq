@@ -3,7 +3,7 @@
 use crossbeam::queue::ArrayQueue;
 
 pub struct Cbq {
-    q: ArrayQueue<u8>,
+    q: ArrayQueue<Vec<u8>>,
 }
 
 //impl Drop for Cbq {
@@ -25,18 +25,21 @@ pub unsafe extern "C" fn cbq__destruct(ptr: *mut Cbq) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cbq__push(ptr: *mut Cbq, val: u8) -> u8 {
+pub unsafe extern "C" fn cbq__push(ptr: *mut Cbq, buf: *const u8, len: u32) -> u8 {
     let cbq = &*ptr;
-    cbq.q.push(val).is_ok().into()
+    let buf = std::slice::from_raw_parts(buf, usize::try_from(len).unwrap());
+    cbq.q.push(buf.to_vec()).is_ok().into()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn cbq__pop(ptr: *mut Cbq, val: *mut u8) -> u8 {
+pub unsafe extern "C" fn cbq__pop(ptr: *mut Cbq, buf: *mut u8, len: u32) -> u32 {
     let cbq = &*ptr;
     match cbq.q.pop() {
         Some(v) => {
-            *val = v;
-            1
+            let to_copy = std::cmp::min(v.len(), usize::try_from(len).unwrap());
+            let buf = std::slice::from_raw_parts_mut(buf, usize::try_from(len).unwrap());
+            buf[..to_copy].copy_from_slice(&v[..to_copy]);
+            u32::try_from(to_copy).unwrap()
         }
         None => 0,
     }
