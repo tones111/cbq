@@ -9,6 +9,7 @@ extern "C"
    void cbq__destruct(void* cbq);
 
    uint8_t cbq__push(void* cbq, uint8_t *buf, uint32_t len);
+   void cbq__force_push(void* cbq, uint8_t *buf, uint32_t len);
    uint32_t cbq__pop(void* cbq, uint8_t *buf, uint32_t len);
 }
 
@@ -21,15 +22,24 @@ int main(int argc, char *argv[])
    void *q = cbq__construct(2);
    assert(cbq__push(q, tx_buf.data(), 1));
    assert(cbq__push(q, tx_buf.data() + 1, 2));
-   assert(!cbq__push(q, tx_buf.data(), 3)); // full
+   assert(!cbq__push(q, tx_buf.data() + 3, 3)); // full
+   cbq__force_push(q, tx_buf.data() + 3, 3);
 
    std::vector<uint8_t> rx_buf = {9, 8, 7, 6, 5, 0, 0, 0, 0, 0};
-   assert(cbq__pop(q, rx_buf.data(), rx_buf.size()) == 1);
-   assert(rx_buf[0] == 0);
+
+   // dropped
+   //assert(cbq__pop(q, rx_buf.data(), rx_buf.size()) == 1);
+   //assert(rx_buf[0] == 0);
 
    assert(cbq__pop(q, rx_buf.data(), rx_buf.size()) == 2);
    assert(rx_buf[0] == 1);
    assert(rx_buf[1] == 2);
+
+   assert(cbq__pop(q, rx_buf.data(), rx_buf.size()) == 3);
+   assert(rx_buf[0] == 3);
+   assert(rx_buf[1] == 4);
+   assert(rx_buf[2] == 5);
+
    assert(!cbq__pop(q, rx_buf.data(), rx_buf.size())); // empty
    cbq__destruct(q);
 

@@ -32,6 +32,13 @@ pub unsafe extern "C" fn cbq__push(ptr: *mut Cbq, buf: *const u8, len: u32) -> u
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn cbq__force_push(ptr: *mut Cbq, buf: *const u8, len: u32) {
+    let cbq = &*ptr;
+    let buf = std::slice::from_raw_parts(buf, usize::try_from(len).unwrap());
+    cbq.q.force_push(buf.to_vec());
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn cbq__pop(ptr: *mut Cbq, buf: *mut u8, len: u32) -> u32 {
     let cbq = &*ptr;
     match cbq.q.pop() {
